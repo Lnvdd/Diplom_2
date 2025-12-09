@@ -16,7 +16,6 @@ class UserAPI(BaseAPI):
         
         response = self._make_request("POST", ENDPOINTS["register_user"], json=payload)
         
-        # ✅ ИСПРАВЛЕНИЕ: Извлекаем токены БЕЗ условия - всегда
         data = response.json()
         self.set_tokens(
             data.get("accessToken"),
@@ -34,7 +33,6 @@ class UserAPI(BaseAPI):
         
         response = self._make_request("POST", ENDPOINTS["login_user"], json=payload)
         
-        # ✅ ИСПРАВЛЕНИЕ: Извлекаем токены БЕЗ условия - всегда
         data = response.json()
         self.set_tokens(
             data.get("accessToken"),

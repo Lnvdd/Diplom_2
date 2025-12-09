@@ -30,7 +30,7 @@ class TestUserLogin:
             )
         
         with allure.step("Проверяем что токен установлен"):
-            # ✅ БЕЗ условия - прямые assert
+          
             assert login_response.status_code == STATUS_CODES["ok"]
             assert user_api.access_token is not None
 

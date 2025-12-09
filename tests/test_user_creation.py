@@ -11,7 +11,6 @@ class TestUserCreation:
     @allure.description("Проверка успешной регистрации пользователя")
     @allure.severity("critical")
     def test_create_user_success(self, user_api):
-        # ✅ Данные создаются В ТЕСТЕ, не в фикстуре
         user_data = UserData.valid_user()
         
         with allure.step("Отправляем запрос на создание пользователя"):
@@ -54,7 +53,6 @@ class TestUserCreation:
         with allure.step("Проверяем что регистрация не прошла"):
             assert response2.status_code != STATUS_CODES["ok"]
 
-    # ✅ ИСПРАВЛЕННАЯ параметризация - БЕЗ прокидывания данных через фикстуру
     @pytest.mark.parametrize("missing_field,user_method,description", [
         ("email", UserData.invalid_user_missing_email, "без email"),
         ("password", UserData.invalid_user_missing_password, "без пароля"),
@@ -64,7 +62,7 @@ class TestUserCreation:
     @allure.description("Проверка валидации обязательных полей")
     @allure.severity("critical")
     def test_create_user_missing_fields(self, user_api, missing_field, user_method, description):
-        # ✅ Вызываем user_method() в тесте
+        
         user_data = user_method()
         
         with allure.step(f"Отправляем запрос {description}"):

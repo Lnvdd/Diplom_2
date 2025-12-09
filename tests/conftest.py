@@ -10,21 +10,20 @@ from api.order_api import OrderAPI
 from data.user_data import UserData
 from config import STATUS_CODES
 
-# ✅ ЧИСТАЯ фикстура - только инициализирует API
+
 @pytest.fixture
 def user_api():
     api = UserAPI()
     yield api
     api.clear_tokens()
 
-# ✅ ЧИСТАЯ фикстура - только инициализирует API
+
 @pytest.fixture
 def order_api():
     api = OrderAPI()
     yield api
     api.clear_tokens()
 
-# ✅ Фикстура создает авторизованный API БЕЗ прокидывания данных
 @pytest.fixture
 def order_api_with_auth(user_api, order_api):
     user_data = UserData.valid_user()

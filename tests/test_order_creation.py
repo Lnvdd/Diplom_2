@@ -24,7 +24,7 @@ class TestOrderCreation:
         
         with allure.step("Проверяем что номер заказа установлен"):
             order_number = response.json().get("order", {}).get("number")
-            # ✅ БЕЗ условия - прямой assert
+            
             assert order_number is not None
 
     @allure.title("Неавторизованный пользователь может создать заказ")
@@ -44,7 +44,7 @@ class TestOrderCreation:
         
         with allure.step("Проверяем что номер заказа установлен"):
             order_number = response.json().get("order", {}).get("number")
-            # ✅ БЕЗ условия - прямой assert
+            
             assert order_number is not None
 
     @pytest.mark.parametrize("order_method,description", [
@@ -66,7 +66,7 @@ class TestOrderCreation:
         
         with allure.step("Проверяем что номер заказа установлен"):
             order_number = response.json().get("order", {}).get("number")
-            # ✅ БЕЗ условия - прямой assert
+           
             assert order_number is not None
 
     @pytest.mark.parametrize("invalid_method,description", [
