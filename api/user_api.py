@@ -1,78 +1,84 @@
+import allure
+
 from api.base_api import BaseAPI
+
 from config import ENDPOINTS, STATUS_CODES
 
-
 class UserAPI(BaseAPI):
-    
+
     def register_user(self, email, password, name):
+        """Регистрирует нового пользователя."""
         payload = {
-            'email': email,
-            'password': password,
-            'name': name
+            "email": email,
+            "password": password,
+            "name": name,
         }
         
-        response = self._make_request('POST', ENDPOINTS['register'], json=payload)
+        response = self._make_request("POST", ENDPOINTS["register_user"], json=payload)
         
-        if response and response.status_code == STATUS_CODES['ok']:
-            data = response.json()
-            if data.get('success'):
-                self.access_token = data.get('accessToken', '').replace('Bearer ', '')
-                self.refresh_token = data.get('refreshToken')
-                self.user_data = data.get('user', {})
+        # ✅ ИСПРАВЛЕНИЕ: Извлекаем токены БЕЗ условия - всегда
+        data = response.json()
+        self.set_tokens(
+            data.get("accessToken"),
+            data.get("refreshToken"),
+        )
+        
         return response
-    
+
     def login_user(self, email, password):
+        """Авторизует пользователя."""
         payload = {
-            'email': email,
-            'password': password
+            "email": email,
+            "password": password,
         }
         
-        response = self._make_request('POST', ENDPOINTS['login'], json=payload)
+        response = self._make_request("POST", ENDPOINTS["login_user"], json=payload)
         
-        if response and response.status_code == STATUS_CODES['ok']:
-            data = response.json()
-            if data.get('success'):
-                self.access_token = data.get('accessToken', '').replace('Bearer ', '')
-                self.refresh_token = data.get('refreshToken')
-                self.user_data = data.get('user', {})
+        # ✅ ИСПРАВЛЕНИЕ: Извлекаем токены БЕЗ условия - всегда
+        data = response.json()
+        self.set_tokens(
+            data.get("accessToken"),
+            data.get("refreshToken"),
+        )
+        
         return response
-    
-    def logout_user(self):
-        if not self.refresh_token:
-            return None
-        
-        payload = {'token': self.refresh_token}
-        response = self._make_request('POST', ENDPOINTS['logout'], json=payload)
-        
-        if response and response.status_code == STATUS_CODES['ok']:
-            self.clear_tokens()
-        return response
-    
-    def get_user(self):
-        response = self._make_request('GET', ENDPOINTS['user'])
-        return response
-    
-    def update_user(self, email=None, name=None, password=None):
-        payload = {}
-        
-        if email:
-            payload['email'] = email
-        if name:
-            payload['name'] = name
-        if password:
-            payload['password'] = password
-        
-        response = self._make_request('PATCH', ENDPOINTS['user'], json=payload)
-        
-        if response and response.status_code == STATUS_CODES['ok']:
-            data = response.json()
-            if data.get('success'):
-                self.user_data = data.get('user', {})
-        return response
-    
-    def delete_user(self):
-        response = self._make_request('DELETE', ENDPOINTS['user'])
-        
-        if response and response.status_code == STATUS_CODES['ok']:
-            self.clear_tokens()
-        return response
+
+    def delete_user(self, access_token):
+        """Удаляет пользователя."""
+        headers = {"Authorization": access_token}
+        return self._make_request("DELETE", ENDPOINTS["delete_user"], headers=headers)
+
+    def update_user_email(self, email):
+        """Обновляет email пользователя."""
+        payload = {"email": email}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)
+
+    def update_user_name(self, name):
+        """Обновляет имя пользователя."""
+        payload = {"name": name}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)
+
+    def update_user_password(self, password):
+        """Обновляет пароль пользователя."""
+        payload = {"password": password}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)
+
+    def update_user_email_and_name(self, email, name):
+        """Обновляет email и имя пользователя."""
+        payload = {"email": email, "name": name}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)
+
+    def update_user_email_and_password(self, email, password):
+        """Обновляет email и пароль пользователя."""
+        payload = {"email": email, "password": password}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)
+
+    def update_user_name_and_password(self, name, password):
+        """Обновляет имя и пароль пользователя."""
+        payload = {"name": name, "password": password}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)
+
+    def update_user_all(self, email, name, password):
+        """Обновляет все данные пользователя."""
+        payload = {"email": email, "name": name, "password": password}
+        return self._make_request("PATCH", ENDPOINTS["update_user"], json=payload)

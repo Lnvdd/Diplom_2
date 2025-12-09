@@ -1,81 +1,53 @@
 import allure
 import pytest
-
 from config import STATUS_CODES
+from data.user_data import UserData
 
-
-@allure.feature('User Login')
-@allure.story('User Authentication')
+@allure.feature("User Login")
+@allure.story("User Authentication")
 class TestUserLogin:
 
-    @allure.title('Пользователь может авторизоваться с валидными данными')
-    @allure.description('Проверка успешной авторизации')
-    @allure.severity('critical')
-    def test_login_user_success(self, logged_in_user):
-        user_api, email, password, name = logged_in_user
+    @allure.title("Пользователь может авторизоваться с валидными данными")
+    @allure.description("Проверка успешной авторизации")
+    @allure.severity("critical")
+    def test_login_user_success(self, user_api):
+        user_data = UserData.valid_user()
         
+        with allure.step("Создаем пользователя"):
+            register_response = user_api.register_user(
+                user_data["email"],
+                user_data["password"],
+                user_data["name"],
+            )
+            assert register_response.status_code == STATUS_CODES["ok"]
         
-        response = user_api.login_user(email, password)
-
-        with allure.step('Проверяем статус ответа'):
-            assert response.status_code == STATUS_CODES['ok']
-
-        with allure.step('Проверяем успешность'):
-            assert response.json().get('success') is True
-
-        with allure.step('Проверяем токен'):
-            assert response.json().get('accessToken') is not None
-
-        with allure.step('Проверяем что пользователь авторизован'):
+        user_api.clear_tokens()
+        
+        with allure.step("Авторизуемся"):
+            login_response = user_api.login_user(
+                user_data["email"],
+                user_data["password"],
+            )
+        
+        with allure.step("Проверяем что токен установлен"):
+            # ✅ БЕЗ условия - прямые assert
+            assert login_response.status_code == STATUS_CODES["ok"]
             assert user_api.access_token is not None
 
-    @allure.title('Нельзя авторизоваться с неправильным email')
-    @allure.description('Проверка что неправильный email приводит к ошибке')
-    @allure.severity('critical')
-    def test_login_user_invalid_email(self, user_api):
-        from data.user_data import UserData
-        invalid_login = UserData.invalid_login_wrong_email()
-
-        with allure.step('Пытаемся авторизоваться с неправильным email'):
+    @pytest.mark.parametrize("invalid_data,description", [
+        (UserData.invalid_login_wrong_email(), "неправильный email"),
+        (UserData.invalid_login_empty_email(), "пустой email"),
+        (UserData.invalid_login_empty_password(), "пустой пароль"),
+    ])
+    @allure.title("Авторизация не проходит с неправильными данными")
+    @allure.description("Проверка что неправильные данные приводят к ошибке")
+    @allure.severity("critical")
+    def test_login_user_invalid(self, user_api, invalid_data, description):
+        with allure.step(f"Пытаемся авторизоваться с {description}"):
             response = user_api.login_user(
-                invalid_login['email'],
-                invalid_login['password']
+                invalid_data["email"],
+                invalid_data["password"],
             )
-
-        with allure.step('Проверяем ошибку'):
-            
-            assert response.status_code != STATUS_CODES['ok']
-
-    @allure.title('Нельзя авторизоваться с пустым email')
-    @allure.description('Проверка валидации пустого email')
-    @allure.severity('critical')
-    def test_login_user_empty_email(self, user_api):
-        from data.user_data import UserData
-        invalid_login = UserData.invalid_login_empty_email()
-
-        with allure.step('Пытаемся авторизоваться с пустым email'):
-            response = user_api.login_user(
-                invalid_login['email'],
-                invalid_login['password']
-            )
-
-        with allure.step('Проверяем ошибку'):
-            
-            assert response.status_code != STATUS_CODES['ok']
-
-    @allure.title('Нельзя авторизоваться с пустым паролем')
-    @allure.description('Проверка валидации пустого пароля')
-    @allure.severity('critical')
-    def test_login_user_empty_password(self, user_api):
-        from data.user_data import UserData
-        invalid_login = UserData.invalid_login_empty_password()
-
-        with allure.step('Пытаемся авторизоваться с пустым паролем'):
-            response = user_api.login_user(
-                invalid_login['email'],
-                invalid_login['password']
-            )
-
-        with allure.step('Проверяем ошибку'):
-            
-            assert response.status_code != STATUS_CODES['ok']
+        
+        with allure.step("Проверяем ошибку"):
+            assert response.status_code != STATUS_CODES["ok"]
