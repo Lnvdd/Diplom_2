@@ -1,38 +1,41 @@
 import allure
 import pytest
+
 from config import STATUS_CODES
 from data.user_data import UserData
+
 
 @allure.feature("User Login")
 @allure.story("User Authentication")
 class TestUserLogin:
 
     @allure.title("Пользователь может авторизоваться с валидными данными")
-    @allure.description("Проверка успешной авторизации")
+    @allure.description("Проверка статуса ответа при авторизации")
     @allure.severity("critical")
-    def test_login_user_success(self, user_api):
-        user_data = UserData.valid_user()
-        
-        with allure.step("Создаем пользователя"):
-            register_response = user_api.register_user(
-                user_data["email"],
-                user_data["password"],
-                user_data["name"],
-            )
-            assert register_response.status_code == STATUS_CODES["ok"]
-        
-        user_api.clear_tokens()
-        
+    def test_login_user_success_status(self, user_api, registered_user):
+        user_data = registered_user
+
         with allure.step("Авторизуемся"):
             login_response = user_api.login_user(
                 user_data["email"],
                 user_data["password"],
             )
-        
-        with allure.step("Проверяем что токен установлен"):
-          
-            assert login_response.status_code == STATUS_CODES["ok"]
-            assert user_api.access_token is not None
+
+        assert login_response.status_code == STATUS_CODES["ok"]
+
+    @allure.title("При авторизации устанавливается токен")
+    @allure.description("Проверка что токен получен")
+    @allure.severity("critical")
+    def test_login_user_success_token(self, user_api, registered_user):
+        user_data = registered_user
+
+        with allure.step("Авторизуемся"):
+            user_api.login_user(
+                user_data["email"],
+                user_data["password"],
+            )
+
+        assert user_api.access_token is not None
 
     @pytest.mark.parametrize("invalid_data,description", [
         (UserData.invalid_login_wrong_email(), "неправильный email"),
@@ -48,6 +51,5 @@ class TestUserLogin:
                 invalid_data["email"],
                 invalid_data["password"],
             )
-        
-        with allure.step("Проверяем ошибку"):
-            assert response.status_code != STATUS_CODES["ok"]
+
+        assert response.status_code != STATUS_CODES["ok"]
